@@ -737,7 +737,15 @@ class MongodbSource extends DboSource {
 			return false;
 		}
 
-		$fields = array('$set' => $fields);
+		$op = '$set';
+		foreach (array_keys($fields) as $key) {
+			if ($key[0] === '$') {
+				$op = $key;
+				$fields = $fields[$key];
+				break;
+			}
+		}
+		$fields = array($op => $fields);
 
 		$this->_stripAlias($conditions, $Model->alias);
 		$this->_stripAlias($fields, $Model->alias, false, 'value');
