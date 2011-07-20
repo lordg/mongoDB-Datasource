@@ -737,15 +737,22 @@ class MongodbSource extends DboSource {
 			return false;
 		}
 
-		$op = '$set';
-		foreach (array_keys($fields) as $key) {
-			if ($key[0] === '$') {
-				$op = $key;
-				$fields = $fields[$key];
-				break;
+		//setting Mongo operator
+		if(empty($Model->mongoNoSetOperator)) {
+			$keys = array_keys($fields);
+			if(substr($keys[0],0,1) !== '$') {
+				$fields = array('$set' => $fields);
+			}
+		} elseif(substr($Model->mongoNoSetOperator,0,1) === '$') {
+			if(!empty($fields['modified'])) {
+				$modified = $fields['modified'];
+				unset($fields['modified']);
+				$fields = array($Model->mongoNoSetOperator => $fields, '$set' => array('modified' => $modified));
+			} else {
+				$fields = array($Model->mongoNoSetOperator => $fields);
+
 			}
 		}
-		$fields = array($op => $fields);
 
 		$this->_stripAlias($conditions, $Model->alias);
 		$this->_stripAlias($fields, $Model->alias, false, 'value');
